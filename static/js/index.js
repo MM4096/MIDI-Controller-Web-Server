@@ -27,6 +27,29 @@ $("#previous_patch").on("click", function() {
     });
 });
 
+$("#next_patch_file").on("click", function() {
+    $.ajax({
+        url: "/command/next_patch_file",
+        type: "POST",
+        success: function(response) {
+            updateCommands();
+        }
+    });
+});
+
+
+$("#previous_patch_file").on("click", function() {
+    $.ajax({
+        url: "/command/previous_patch_file",
+        type: "POST",
+        success: function(response) {
+            updateCommands();
+        }
+    });
+});
+
+
+
 function updateCommands(do_loop = false) {
     $.ajax({
         url: "/get_commands",
