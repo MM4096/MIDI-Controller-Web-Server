@@ -192,7 +192,7 @@ function updatePatchList() {
 
     list.append(fragment);
 }
-D
+
 
 function changeSelectedPatchIndex() {
     let list = $("#patch_list").children();
