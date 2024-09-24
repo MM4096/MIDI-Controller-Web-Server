@@ -1,4 +1,12 @@
-performance_started = false;
+let performance_started = false;
+let files = [];
+let current_patch_data = {
+    patch_name: "",
+    patch_index: 0,
+    sound_list: [],
+    comments_list: [],
+
+}
 
 $(function() {
     updateCommands(true);
@@ -76,63 +84,74 @@ function updateAllCommands() {
 }
 
 function updateUI(commands) {
-    console.log("started!")
     commands.forEach(function(command) {
-        if (command === "performance_started") {
-            performance_started = true;
-            $("#no_performance").hide();
-            $("#performance").show();
+        let command_parts = command.split("<~separator~>");
+        if (command_parts.length === 0) {
         }
-        else {
-            // command = command.replace("\'\g", "\"");
-            let command_parts = command.split("<~separator~>");
-            if (command_parts.length === 0) {
+        else if (command_parts[0] === "performance_started") {
+            if (command_parts.length < 2) {
+                return;
             }
-            else {
-                if (command_parts[0] === "performance_update") {
-                    $("#no_performance").hide();
-                    $("#performance").show();
-                    if (command_parts.length >= 6) {
-                        try {
-                            let current_patch = command_parts[1];
-                            let file_list = JSON.parse(command_parts[2]);
-                            let sound_list = JSON.parse(command_parts[3]);
-                            let patch_name = command_parts[4];
-                            let patch_index = parseInt(command_parts[5]);
 
-                            $("#patch_name").text(patch_name);
-                            $("#patch_list").empty();
-                            for (let i = 0; i < sound_list.length; i++) {
-                                let additional_content = "";
-                                if (i === patch_index) {
-                                    additional_content = "class='selected'";
-                                }
-                                $("#patch_list").append(`<li ${additional_content}><button class="list_button" onclick="changePatchIndex(${i})">${sound_list[i].sound}</button></li>`);
-                            }
-                        }
-                        catch (error) {
-                            console.error("Error parsing performance update: " + error);
-                        }
-                    }
-                    else {
-                        console.warn("Incorrectly Formatted performance output: " + command);
-                    }
+            try {
+                files = JSON.parse(command_parts[1]);
+                $("#file_list").empty()
+                for (let i = 0; i < files.length; i++) {
+                    $("#file_list").append(`<option value="${i}">${files[i]}</option>`)
                 }
+
+                performance_started = true;
+                $("#no_performance").hide();
+                $("#performance").show();
+            }
+            catch (error) {
+                console.error("Error parsing files: " + error);
+            }
+        }
+        else if (command_parts[0] === "performance_ended") {
+            performance_started = false;
+            $("#no_performance").show();
+            $("#performance").hide();
+        }
+        else if (command_parts[0] === "performance_file_changed") {
+            if (command_parts.length < 4) {
+                return;
+            }
+            try {
+                current_patch_data["patch_name"] = files[parseInt(command_parts[1])];
+                current_patch_data["sound_list"] = JSON.parse(command_parts[2]);
+                current_patch_data["comments_list"] = JSON.parse(command_parts[3]);
+
+                updatePatchList();
+            }
+            catch (error) {
+                console.error("Error parsing file update: " + error);
+            }
+        }
+        else if (command_parts[0] === "performance_patch_changed") {
+            if (command_parts.length < 2) {
+                return;
+            }
+            try {
+                current_patch_data["patch_index"] = parseInt(command_parts[1]);
+
+                changeSelectedPatchIndex();
+            }
+            catch (error) {
+                console.error("Error parsing patch update: " + error);
             }
         }
     });
 
-    if (commands.length > 0) {
-        $.ajax({
-            url: "/command/clear_output_file",
-            type: "POST",
-            success: function(result) {
-
-            }
-        });
-    }
-
-    console.log("Finished!")
+    // if (commands.length > 0) {
+    //     $.ajax({
+    //         url: "/command/clear_output_file",
+    //         type: "POST",
+    //         success: function(result) {
+    //
+    //         }
+    //     });
+    // }
 }
 
 function changePatchIndex(new_index) {
@@ -144,3 +163,56 @@ function changePatchIndex(new_index) {
         }
     });
 }
+
+function updatePatchList() {
+    $("#patch_name").text(current_patch_data["patch_name"]);
+
+    let list = $("#patch_list");
+    list.empty();
+
+    let fragment = document.createDocumentFragment();
+
+    for (let i = 0; i < current_patch_data["sound_list"].length; i++) {
+        let listItem = document.createElement("li");
+
+        if (i === current_patch_data["patch_index"]) {
+            listItem.className = 'selected';
+        }
+
+        let button = document.createElement("button");
+        button.className = "list_button";
+        button.textContent = current_patch_data["sound_list"][i];
+        button.onclick = function() {
+            changePatchIndex(i);
+        };
+
+        listItem.appendChild(button);
+        fragment.appendChild(listItem);
+    }
+
+    list.append(fragment);
+}
+D
+
+function changeSelectedPatchIndex() {
+    let list = $("#patch_list").children();
+
+    list.each(function(index, element) {
+        if (index === current_patch_data["patch_index"]) {
+            $(element).addClass("selected");
+        } else {
+            $(element).removeClass("selected");
+        }
+    });
+}
+
+$("#go_to_file").on("click", function() {
+    let index = $("#file_list").find(":selected").val();
+    $.ajax({
+        url: `/command/set_file_index ${index}`,
+        type: "POST",
+        success: function(result) {
+            updateCommands();
+        }
+    });
+});
