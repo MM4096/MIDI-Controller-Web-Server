@@ -27,8 +27,10 @@ This project serves to provide an intranet web server that can be used to contro
 The default port is `8090`.
 
 Run the application with `./[app name here]`, with the following optional parameters:
-- `--port PORT`: Runs the app on `PORT` (default: 8089)
+- `--port PORT`: Runs the app on `PORT` (default: 8090)
 - `--debug DEBUG`: Either `0` or `1` (default: 0), whether the app should run in debug mode or not.
+- `--username USERNAME`: The username for the web server (if not provided, no authentication is required)
+- `--password PASSWORD`: The password for the web server (if not provided and a username is given, a password is randomly generated and printed)
 
 Then, you should see the following output:
 ```
