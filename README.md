@@ -4,7 +4,7 @@ This project serves to provide an intranet web server that can be used to contro
 
 ## Installation
 ### Pre-requisites
-- [`Midi-Controller - textual`](https://github.com/MM4096/Midi-Controller) (version >= v0.5, THIS IS STILL A PRE-RELEASE VERSION!)
+- [`Midi-Controller - textual`](https://github.com/MM4096/Midi-Controller) (version >= v0.5)
 
 #### For Development
 - `python3 (version >= 3.6)`
